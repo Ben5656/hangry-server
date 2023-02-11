@@ -18,14 +18,14 @@ fun main() {
 
     val lat = 52.948698
     val long = -1.180276
-    val radius = 1500
-    val foodType = "halal"
+    val radius = 300
+    val foodType = "pub"
     val numberOfImages = 2
 
     getNearby(API_KEY, lat, long, radius, foodType, numberOfImages)
 }
 
-fun getNearby(API_KEY: String, lat: Double, long: Double, radius: Int, foodType: String, numberOfImages: Int) {
+fun getNearby(API_KEY: String, lat: Double, long: Double, radius: Int, foodType: String, numberOfImages: Int) : List<Restaurant> {
     val restaurantArray = mutableListOf<Restaurant>()
 
     val url = "https://maps.googleapis.com/maps/api/place/"
@@ -85,6 +85,8 @@ fun getNearby(API_KEY: String, lat: Double, long: Double, radius: Int, foodType:
     for(restaurant in restaurantArray){
         println(restaurant)
     }
+
+    return restaurantArray
 }
 
 fun Application.configureSerialization() {
