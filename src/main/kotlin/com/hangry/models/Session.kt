@@ -3,6 +3,7 @@ package com.hangry.models
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.random.Random
 
 val sessionStorage = mutableListOf<Session>()
@@ -17,6 +18,11 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     @Transient private val alcoholVotes: MutableMap<Boolean, Int> = HashMap()
     @Transient private val minPriceVotes: MutableMap<Int, Int> = HashMap()
     @Transient private val maxPriceVotes: MutableMap<Int, Int> = HashMap()
+
+    // Store if location pair has been voted on already by user
+    @Transient private val pairVoted: MutableMap<Pair<String, String>, List<String>> = HashMap()
+    // Store the currently issued pair
+    @Transient private val givenPair: MutableMap<String, Pair<String, String>> = HashMap()
 
     var started = false
 
@@ -48,6 +54,34 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         }
 
         return TokenInfo(token, false)
+    }
+
+    private fun restaurantIdToRestaurant(id: String): Restaurant {
+        return Restaurant("test")
+    }
+
+    fun getRestaurantChoices(token: String): Choices {
+        var pair = givenPair[token]
+        if (pair == null) {
+            // TODO: some logic to get two pairs and also handle when no pairs left
+            pair = Pair("A", "B") // dummy
+
+            givenPair[token] = pair
+        }
+
+        return Choices(listOf(
+            restaurantIdToRestaurant(pair.first),
+            restaurantIdToRestaurant(pair.second)
+        ))
+    }
+
+    fun addRestaurantVote(token: String, location: String) {
+        val pair = givenPair[token]
+        if (pair != null && (pair.first == location || pair.second == location)) {
+            // TODO: add vote to location
+
+            givenPair.remove(token)
+        }
     }
 
     fun isAdmin(token: String) = adminToken == token

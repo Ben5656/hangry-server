@@ -48,3 +48,12 @@ data class JoinSessionBody(
 
 @Serializable
 data class TokenInfo(val token: String, val admin: Boolean)
+
+@Serializable
+data class Restaurant(val id: String)
+
+@Serializable
+data class Choices(val choices: List<Restaurant>)
+
+@Serializable
+data class ChoiceBody(val choice: String)
