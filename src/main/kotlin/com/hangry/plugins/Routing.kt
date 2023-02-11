@@ -32,11 +32,30 @@ fun Application.configureRouting() {
                 return@post
             }
 
-            val (categories, diet, alcohol, minPrice, maxPrice) = call.receive<JoinSessionBody>()
-            val tokenInfo = session.createToken(categories, diet, alcohol, minPrice, maxPrice)
+            val (photo) = call.receive<JoinSessionBody>() // TODO: add selfie/photo support
+            val tokenInfo = session.createToken()
             call.respond(tokenInfo)
         }
         // TODO: switch to a proper auth library
+        post("/{code}/preferences") {
+            val code = call.parameters["code"]
+            val token = call.request.headers["Authorization"]
+            val session = sessionStorage.find { it.code == code }
+
+            if (session == null) {
+                // If session doesn't exist, throw 404
+                call.respond(HttpStatusCode.NotFound)
+                return@post
+            } else if (token == null || !session.isValidToken(token)) {
+                // If not authed, or token is not admin, throw 401
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+
+            val (categories, diet, alcohol, minPrice, maxPrice) = call.receive<PreferencesBody>()
+            session.addPreferences(token, categories, diet, alcohol, minPrice, maxPrice)
+            call.respond(HttpStatusCode.OK)
+        }
         put("/{code}/start") {
             val code = call.parameters["code"]
             val token = call.request.headers["Authorization"]

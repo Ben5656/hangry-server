@@ -12,8 +12,10 @@ val sessionStorage = mutableListOf<Session>()
 
 @Serializable
 class Session(val code: String, val type: SessionType, val location: Location, val radius: Int) { // TODO: do this with inheritance
-    @Transient private val tokens = mutableListOf<String>()
+    @Transient private val tokens = mutableSetOf<String>() // joined, but not necessarily given votes
     @Transient private var adminToken: String? = null
+
+    @Transient private val givenPreferences = mutableSetOf<String>() // track if token has given votes/preferences
 
     @Transient private val categoryVotes: MutableMap<Category, Int> = EnumMap(Category::class.java)
     @Transient private val dietVotes: MutableMap<Diet, Int> = EnumMap(Diet::class.java)
@@ -44,14 +46,9 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         }
     }
 
-    fun createToken(categories: List<Category>, diet: Diet, alcohol: Boolean, minPrice: Int, maxPrice: Int): TokenInfo {
+    fun createToken(): TokenInfo {
         val token = UUID.randomUUID().toString()
         tokens.add(token) // add user's token to session
-        // increment vote answer for each question
-        categories.forEach { addCategory(it) }
-        addDiet(diet)
-        addAlcohol(alcohol)
-        addPrice(minPrice, maxPrice)
 
         if (adminToken == null) {
             adminToken = token
@@ -59,6 +56,15 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         }
 
         return TokenInfo(token, false)
+    }
+
+    fun addPreferences(token: String, categories: List<Category>, diet: Diet, alcohol: Boolean, minPrice: Int, maxPrice: Int) {
+        givenPreferences.add(token)
+        // increment vote answer for each question
+        categories.forEach { addCategory(it) }
+        addDiet(diet)
+        addAlcohol(alcohol)
+        addPrice(minPrice, maxPrice)
     }
 
     private fun addCategory(category: Category) {
@@ -77,6 +83,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         minPriceVotes[minPrice] = minPriceVotes.getOrDefault(minPrice, 0) + 1
         maxPriceVotes[maxPrice] = maxPriceVotes.getOrDefault(maxPrice, 0) + 1
     }
+
 
     private fun restaurantIdToRestaurant(id: String): Restaurant {
         return restaurants.find { it.id == id }!! // should do this a better way
@@ -118,6 +125,10 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     fun isValidToken(token: String) = tokens.any { it == token}
     fun start() {
         started = true
+
+        // Remove all users who joined but have not given their preferences
+        val notGivenPreferences = tokens.minus(givenPreferences)
+        tokens.removeAll(notGivenPreferences)
 
         val orderedCategories = categoryVotes.toList().sortedBy { (_, value) -> value }
         orderedCategories.forEach {

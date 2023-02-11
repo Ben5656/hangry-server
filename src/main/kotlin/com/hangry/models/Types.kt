@@ -39,6 +39,11 @@ data class CreateSessionBody(val type: SessionType, val location: Location, val 
 
 @Serializable
 data class JoinSessionBody(
+    val photo: String
+)
+
+@Serializable
+data class PreferencesBody(
     val categories: List<Category>,
     val diet: Diet,
     val alcohol: Boolean,
