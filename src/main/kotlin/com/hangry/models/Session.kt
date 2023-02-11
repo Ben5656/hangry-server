@@ -25,6 +25,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     @Transient private val givenPair: MutableMap<String, Pair<String, String>> = HashMap()
 
     var started = false
+    var ended = false
 
     companion object {
         val SESSION_CODE_LENGTH = 4
@@ -63,7 +64,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     fun getRestaurantChoices(token: String): Choices {
         var pair = givenPair[token]
         if (pair == null) {
-            // TODO: some logic to get two pairs and also handle when no pairs left
+            // TODO: some logic to get two pairs and also handle when no pairs left/ended
             pair = Pair("A", "B") // dummy
 
             givenPair[token] = pair
@@ -76,6 +77,8 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     }
 
     fun addRestaurantVote(token: String, location: String) {
+        if (ended) { return }
+
         val pair = givenPair[token]
         if (pair != null && (pair.first == location || pair.second == location)) {
             // TODO: add vote to location
@@ -87,4 +90,9 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     fun isAdmin(token: String) = adminToken == token
     fun isValidToken(token: String) = tokens.any { it == token}
     fun start() { started = true }
+    fun end() {
+        ended = true
+
+        // TODO: ordering calculations
+    }
 }

@@ -57,3 +57,6 @@ data class Choices(val choices: List<Restaurant>)
 
 @Serializable
 data class ChoiceBody(val choice: String)
+
+@Serializable
+data class RestaurantResults(val results: List<Restaurant>)

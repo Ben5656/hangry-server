@@ -105,5 +105,37 @@ fun Application.configureRouting() {
             session.addRestaurantVote(token, choice.choice)
             call.respond(HttpStatusCode.OK)
         }
+        put("/{code}/end") {
+            val code = call.parameters["code"]
+            val token = call.request.headers["Authorization"]
+            val session = sessionStorage.find { it.code == code }
+
+            if (session == null) {
+                // If session doesn't exist, throw 404
+                call.respond(HttpStatusCode.NotFound)
+                return@put
+            } else if (token == null || !session.isAdmin(token)) {
+                // If not authed, or token is not admin, throw 401
+                call.respond(HttpStatusCode.Unauthorized)
+                return@put
+            }
+
+            session.end()
+            call.respond(HttpStatusCode.OK) // is this required?
+        }
+        get("/{code}/results") {
+            // There's no reason to authenticate this
+            val code = call.parameters["code"]
+            val session = sessionStorage.find { it.code == code }
+
+            if (session == null) {
+                // If session doesn't exist, throw 404
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+
+            val restaurants = arrayListOf(Restaurant("A")) // this is ordered
+            call.respond(RestaurantResults(restaurants))
+        }
     }
 }
