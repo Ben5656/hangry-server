@@ -13,5 +13,6 @@ fun main() {
 fun Application.module() {
     configureRouting()
     configureSerialization()
+    // TODO: Request validation
 }
 
