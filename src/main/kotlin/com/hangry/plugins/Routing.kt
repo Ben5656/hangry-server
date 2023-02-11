@@ -29,6 +29,8 @@ fun Application.configureRouting() {
                 return@post
             }
 
+            // TODO: stop people joining if already started
+
             val (categories, diet, alcohol, minPrice, maxPrice) = call.receive<JoinSessionBody>()
             val tokenInfo = session.createToken(categories, diet, alcohol, minPrice, maxPrice)
             call.respond(tokenInfo)
@@ -132,10 +134,13 @@ fun Application.configureRouting() {
                 // If session doesn't exist, throw 404
                 call.respond(HttpStatusCode.NotFound)
                 return@get
+            } else if (!session.ended) {
+                // Session has not ended yet
+                call.respond(HttpStatusCode.Locked)
+                return@get
             }
 
-            val restaurants = arrayListOf(Restaurant("A")) // this is ordered
-            call.respond(RestaurantResults(restaurants))
+            call.respond(session.getOrderedRestaurants())
         }
     }
 }
