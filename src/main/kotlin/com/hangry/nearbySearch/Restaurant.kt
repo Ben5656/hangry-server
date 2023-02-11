@@ -1,4 +1,4 @@
-package com.hangry
+package com.hangry.nearbySearch
 
 import kotlinx.serialization.Serializable
 

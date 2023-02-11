@@ -1,4 +1,4 @@
-package com.hangry
+package com.hangry.nearbySearch
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -62,11 +62,12 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
                     val restaurant: Restaurant = specificSearchRequest.body()
                     val encodedArray = mutableListOf<String>()
 
-                    if(restaurant.result.photos == null) {
+                    if (restaurant.result.photos == null) {
                         restaurant.result.photos_encoded = mutableListOf()
                     } else {
                         for (photo in restaurant.result.photos.take(2)) {
-                            val photoRequest: HttpResponse = client.get("${url}photo?maxwidth=400&photo_reference=${photo.photo_reference}&key=$API_KEY")
+                            val photoRequest: HttpResponse =
+                                client.get("${url}photo?maxwidth=400&photo_reference=${photo.photo_reference}&key=$API_KEY")
                             encodedArray += Base64.getEncoder().encodeToString(photoRequest.body())
                         }
                         restaurant.result.photos_encoded = encodedArray.take(numberOfImages)
@@ -82,7 +83,7 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
     }
     client.close()
 
-    for(restaurant in restaurantArray){
+    for (restaurant in restaurantArray) {
         println(restaurant)
     }
 

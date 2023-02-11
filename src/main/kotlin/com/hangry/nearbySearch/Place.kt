@@ -1,7 +1,6 @@
-package com.hangry
+package com.hangry.nearbySearch
 
 import kotlinx.serialization.Serializable
-import java.util.Base64
 
 @Serializable
 data class Place(
@@ -17,11 +16,11 @@ data class Result(
     val icon: String? = null,
     val icon_background_color: String? = null,
     val icon_mask_base_uri: String? = null,
-    val name: String? = null,
+    val name: String,
     val opening_hours: OpeningHours? = null,
     val photos: List<Photo>? = null,
     var photos_encoded: List<String>? = null,
-    val place_id: String? = null,
+    val place_id: String,
     val plus_code: PlusCode? = null,
     val price_level: Int? = null,
     val rating: Double? = null,

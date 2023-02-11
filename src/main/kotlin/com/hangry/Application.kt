@@ -1,5 +1,6 @@
 package com.hangry
 
+import com.hangry.nearbySearch.configureSerialization
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*

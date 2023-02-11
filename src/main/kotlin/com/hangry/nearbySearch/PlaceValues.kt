@@ -1,4 +1,4 @@
-package com.hangry
+package com.hangry.nearbySearch
 
 data class PlaceValues(
     val html_attributions: List<Any>,
