@@ -10,7 +10,6 @@ import io.ktor.server.plugins.contentnegotiation.*
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.serialization.jackson.*
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
@@ -21,11 +20,12 @@ fun main() {
     val long = -1.180276
     val radius = 1500
     val foodType = "halal"
+    val numberOfImages = 2
 
-    getNearby(API_KEY, lat, long, radius, foodType)
+    getNearby(API_KEY, lat, long, radius, foodType, numberOfImages)
 }
 
-fun getNearby(API_KEY: String, lat: Double, long: Double, radius: Int, foodType: String) {
+fun getNearby(API_KEY: String, lat: Double, long: Double, radius: Int, foodType: String, numberOfImages: Int) {
     val restaurantArray = mutableListOf<Restaurant>()
 
     val url = "https://maps.googleapis.com/maps/api/place/"
@@ -65,11 +65,11 @@ fun getNearby(API_KEY: String, lat: Double, long: Double, radius: Int, foodType:
                     if(restaurant.result.photos == null) {
                         restaurant.result.photos_encoded = mutableListOf()
                     } else {
-                        for (photo in restaurant.result.photos) {
+                        for (photo in restaurant.result.photos.take(2)) {
                             val photoRequest: HttpResponse = client.get("${url}photo?maxwidth=400&photo_reference=${photo.photo_reference}&key=$API_KEY")
                             encodedArray += Base64.getEncoder().encodeToString(photoRequest.body())
                         }
-                        restaurant.result.photos_encoded = encodedArray
+                        restaurant.result.photos_encoded = encodedArray.take(numberOfImages)
                         restaurantArray += restaurant
                     }
                 } else {
@@ -81,6 +81,10 @@ fun getNearby(API_KEY: String, lat: Double, long: Double, radius: Int, foodType:
         }
     }
     client.close()
+
+    for(restaurant in restaurantArray){
+        println(restaurant)
+    }
 }
 
 fun Application.configureSerialization() {
