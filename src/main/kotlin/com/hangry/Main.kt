@@ -14,18 +14,18 @@ import kotlinx.coroutines.runBlocking
 import java.util.*
 
 fun main() {
-    val API_KEY: String = dotenv()["API_KEY"]
-
     val lat = 52.948698
     val long = -1.180276
     val radius = 300
     val foodType = "pub"
     val numberOfImages = 2
 
-    getNearby(API_KEY, lat, long, radius, foodType, numberOfImages)
+    getNearby(lat, long, radius, foodType, numberOfImages)
 }
 
-fun getNearby(API_KEY: String, lat: Double, long: Double, radius: Int, foodType: String, numberOfImages: Int) : List<Restaurant> {
+fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOfImages: Int) : List<Restaurant> {
+    val API_KEY: String = dotenv()["API_KEY"]
+
     val restaurantArray = mutableListOf<Restaurant>()
 
     val url = "https://maps.googleapis.com/maps/api/place/"
