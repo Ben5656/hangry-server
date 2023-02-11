@@ -1,11 +1,11 @@
 package com.hangry.models
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.hangry.nearbySearch.getNearby
 import com.hangry.nearbySearchRestaurantToSessionRestaurant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.random.Random
 
 val sessionStorage = mutableListOf<Session>()
@@ -147,8 +147,8 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         ended = true
     }
 
+    @JsonIgnore
     fun getOrderedRestaurants(): List<Restaurant> {
-        // TODO: make ordered based on votes
         return restaurants
     }
 }
