@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.8.10"
     id("io.ktor.plugin") version "2.2.3"
     kotlin("plugin.serialization") version "1.8.0"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
 group = "com.hangry"
