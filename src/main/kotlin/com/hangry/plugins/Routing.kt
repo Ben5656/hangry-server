@@ -27,9 +27,10 @@ fun Application.configureRouting() {
                 // If session doesn't exist, throw 404
                 call.respond(HttpStatusCode.NotFound)
                 return@post
+            } else if (session.started) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
             }
-
-            // TODO: stop people joining if already started
 
             val (categories, diet, alcohol, minPrice, maxPrice) = call.receive<JoinSessionBody>()
             val tokenInfo = session.createToken(categories, diet, alcohol, minPrice, maxPrice)
