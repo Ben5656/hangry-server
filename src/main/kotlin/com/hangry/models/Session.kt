@@ -130,13 +130,14 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         val notGivenPreferences = tokens.minus(givenPreferences)
         tokens.removeAll(notGivenPreferences)
 
+        // Create initial order based on category popularity
         val orderedCategories = categoryVotes.toList().sortedBy { (_, value) -> value }
         orderedCategories.forEach {
             val restaurantsForCategory = getNearby(
                 location.lat.toDouble(),
                 location.lng.toDouble(),
                 radius,
-                it.toString(),
+                it.first.toString(),
                 NUMBER_OF_IMAGES
             ).map { nearbySearchRestaurantToSessionRestaurant(it) }
             restaurants.addAll(restaurantsForCategory)
