@@ -36,5 +36,41 @@ fun Application.configureRouting() {
             val tokenInfo = session.createToken(categories, diet, alcohol, minPrice, maxPrice)
             call.respond(tokenInfo)
         }
+        // TODO: switch to a proper auth library
+        put("/{code}/start") {
+            val code = call.parameters["code"]
+            val token = call.request.headers["Authorization"]
+            val session = sessionStorage.find { it.code == code }
+
+            if (session == null) {
+                // If session doesn't exist, throw 404
+                call.respond(HttpStatusCode.NotFound)
+                return@put
+            } else if (token == null || !session.isAdmin(token)) {
+                // If not authed, or token is not admin, throw 401
+                call.respond(HttpStatusCode.Unauthorized)
+                return@put
+            }
+
+            session.start()
+            call.respond(HttpStatusCode.OK) // is this required?
+        }
+        get("/{code}/info") {
+            val code = call.parameters["code"]
+            val token = call.request.headers["Authorization"]
+            val session = sessionStorage.find { it.code == code }
+
+            if (session == null) {
+                // If session doesn't exist, throw 404
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            } else if (token == null || !session.isValidToken(token)) {
+                // If not authed, or token is not valid, throw 401
+                call.respond(HttpStatusCode.Unauthorized)
+                return@get
+            }
+
+            call.respond(session)
+        }
     }
 }

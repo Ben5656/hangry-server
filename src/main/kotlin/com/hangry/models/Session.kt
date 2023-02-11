@@ -1,6 +1,7 @@
 package com.hangry.models
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.util.*
 import kotlin.random.Random
 
@@ -8,14 +9,16 @@ val sessionStorage = mutableListOf<Session>()
 
 @Serializable
 class Session(val code: String, val type: SessionType, val location: Location, val radius: Int) { // TODO: do this with inheritance
-    private val tokens = mutableListOf<String>()
-    private var adminToken: String? = null
+    @Transient private val tokens = mutableListOf<String>()
+    @Transient private var adminToken: String? = null
 
-    private val categoryVotes: MutableMap<Category, Int> = EnumMap(Category::class.java)
-    private val dietVotes: MutableMap<Diet, Int> = EnumMap(Diet::class.java)
-    private val alcoholVotes: MutableMap<Boolean, Int> = HashMap()
-    private val minPriceVotes: MutableMap<Int, Int> = HashMap()
-    private val maxPriceVotes: MutableMap<Int, Int> = HashMap()
+    @Transient private val categoryVotes: MutableMap<Category, Int> = EnumMap(Category::class.java)
+    @Transient private val dietVotes: MutableMap<Diet, Int> = EnumMap(Diet::class.java)
+    @Transient private val alcoholVotes: MutableMap<Boolean, Int> = HashMap()
+    @Transient private val minPriceVotes: MutableMap<Int, Int> = HashMap()
+    @Transient private val maxPriceVotes: MutableMap<Int, Int> = HashMap()
+
+    var started = false
 
     companion object {
         val SESSION_CODE_LENGTH = 4
@@ -48,4 +51,6 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     }
 
     fun isAdmin(token: String) = adminToken == token
+    fun isValidToken(token: String) = tokens.any { it == token}
+    fun start() { started = true }
 }
