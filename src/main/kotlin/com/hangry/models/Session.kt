@@ -9,6 +9,8 @@ val sessionStorage = mutableListOf<Session>()
 @Serializable
 class Session(val code: String, val type: SessionType, val location: Location, val radius: Int) { // TODO: do this with inheritance
     private val tokens = mutableListOf<String>()
+    private var adminToken: String? = null
+
     private val categoryVotes: MutableMap<Category, Int> = EnumMap(Category::class.java)
     private val dietVotes: MutableMap<Diet, Int> = EnumMap(Diet::class.java)
     private val alcoholVotes: MutableMap<Boolean, Int> = HashMap()
@@ -27,15 +29,23 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         }
     }
 
-    fun addToken(categories: List<Category>, diet: Diet, alcohol: Boolean, minPrice: Int, maxPrice: Int): String {
-        val uuid = UUID.randomUUID().toString()
-        tokens.add(uuid) // add user's token to session
+    fun createToken(categories: List<Category>, diet: Diet, alcohol: Boolean, minPrice: Int, maxPrice: Int): TokenInfo {
+        val token = UUID.randomUUID().toString()
+        tokens.add(token) // add user's token to session
         // increment vote answer for each question
         categories.forEach { categoryVotes[it] = categoryVotes.getOrDefault(it, 0) + 1 }
         dietVotes[diet] = dietVotes.getOrDefault(diet, 0) + 1
         alcoholVotes[alcohol] = alcoholVotes.getOrDefault(alcohol, 0) + 1
         minPriceVotes[minPrice] = minPriceVotes.getOrDefault(minPrice, 0) + 1
         maxPriceVotes[maxPrice] = maxPriceVotes.getOrDefault(maxPrice, 0) + 1
-        return uuid
+
+        if (adminToken == null) {
+            adminToken = token
+            return TokenInfo(token, true)
+        }
+
+        return TokenInfo(token, false)
     }
+
+    fun isAdmin(token: String) = adminToken == token
 }

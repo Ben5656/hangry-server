@@ -39,7 +39,6 @@ data class CreateSessionBody(val type: SessionType, val location: Location, val 
 
 @Serializable
 data class JoinSessionBody(
-    val code: String,
     val categories: List<Category>,
     val diet: Diet,
     val alcohol: Boolean,
@@ -48,4 +47,4 @@ data class JoinSessionBody(
 )
 
 @Serializable
-data class JoinSessionResponse(val token: String)
+data class TokenInfo(val token: String, val admin: Boolean)
