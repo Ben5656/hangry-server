@@ -15,3 +15,4 @@ fun Application.module() {
     configureSerialization()
     // TODO: Request validation
 }
+
