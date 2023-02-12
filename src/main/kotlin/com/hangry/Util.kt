@@ -20,9 +20,10 @@ fun nearbySearchRestaurantToSessionRestaurant(restaurant: Restaurant): com.hangr
         restaurant.result.website,
         restaurant.result.editorial_summary?.overview,
         restaurant.result.wheelchair_accessible_entrance,
+        if (restaurant.result.geometry != null)
         Location(
             restaurant.result.geometry.location.lat.toFloat(),
             restaurant.result.geometry.location.lng.toFloat()
-        )
+        ) else null
     )
 }
