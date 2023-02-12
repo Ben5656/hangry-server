@@ -17,7 +17,7 @@ fun main() {
     val lat = 52.948698
     val long = -1.180276
     val radius = 1500
-    val foodType = "indian"
+    val foodType = "italian"
     val numberOfImages = 2
 
     getNearby(lat, long, radius, foodType, numberOfImages)
@@ -67,7 +67,7 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
                     if (restaurant.result.photos == null) {
                         restaurant.result.photos_encoded = mutableListOf()
                     } else {
-                        for (photo in restaurant.result.photos.take(2)) {
+                        for (photo in restaurant.result.photos.take(numberOfImages)) {
                             val photoRequest: HttpResponse =
                                 client.get("${url}photo?maxwidth=400&photo_reference=${photo.photo_reference}&key=$API_KEY")
                             encodedArray += Base64.getEncoder().encodeToString(photoRequest.body())
