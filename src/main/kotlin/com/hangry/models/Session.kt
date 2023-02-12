@@ -155,18 +155,28 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         val pair = givenPair[token]
         // Check vote is valid for current stored pair for token
         if (pair != null && (pair.first == location || pair.second == location)) {
-            // Locations should always exist
-            restaurantsPoints[restaurantIdToRestaurant(location)]?.minus(1) // minus improves score (lower is better)
-            restaurantsPoints[restaurantIdToRestaurant( // plus is worse
+            // Decrement voted for restaurant (lower is better)
+            val chosenRestaurant = restaurantIdToRestaurant(location)
+            val chosenRestaurantPoints = restaurantsPoints[chosenRestaurant]
+            if (chosenRestaurantPoints != null) {
+                restaurantsPoints[chosenRestaurant] = chosenRestaurantPoints.dec()
+            }
+            // Increment failing restaurant (lower is better)
+            val otherRestaurant = restaurantIdToRestaurant(
                 if (pair.first == token) pair.second else pair.first
-            )]?.plus(1)
+            )
+            val otherRestaurantPoints = restaurantsPoints[otherRestaurant]
+            if (otherRestaurantPoints != null) {
+                restaurantsPoints[otherRestaurant] = otherRestaurantPoints.inc()
+            }
 
             givenPair.remove(token)
             pairVoted.add(pair)
-            if (tokenChoices[token] == null) {
+            val tokenChoicesCount = tokenChoices[token]
+            if (tokenChoicesCount == null) {
                 tokenChoices[token] = 1
             } else {
-                tokenChoices[token]?.plus(1)
+                tokenChoices[token] = tokenChoicesCount.inc()
             }
         }
     }
@@ -226,7 +236,13 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         val totalVoters = givenPreferences.size
 
         val scoreZeroOffset = restaurantsPoints.values.min()
-        restaurantsPoints.keys.forEach { restaurantsPoints[it]?.minus(scoreZeroOffset) } // normalise the minimum value to be zero
+        restaurantsPoints.keys.forEach {
+            // normalise the minimum value to be zero
+            val restaurantPointsValue = restaurantsPoints[it]
+            if (restaurantPointsValue != null) {
+                restaurantsPoints[it] = restaurantPointsValue.minus(scoreZeroOffset)
+            }
+        }
 
         // calculate score based on voting (0-1)
         val maxScore = restaurantsPoints.values.max()
