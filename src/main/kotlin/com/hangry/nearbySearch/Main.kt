@@ -8,16 +8,17 @@ import io.ktor.client.statement.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.hangry.foodStandards.foodStandardsLookup
 import io.ktor.serialization.jackson.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
 fun main() {
-    val lat = 52.948698
-    val long = -1.180276
-    val radius = 1500
-    val foodType = "italian"
+    val lat = 39.916668
+    val long = 116.383331
+    val radius = 1000
+    val foodType = "chinese"
     val numberOfImages = 2
 
     getNearby(lat, long, radius, foodType, numberOfImages)
@@ -45,12 +46,8 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
                     "&key=$API_KEY"
         )
 
-        println(generalSearchRequest.body() as String)
-
         if (generalSearchRequest.status.value in 200..299) {
             val jsonObject: Place = generalSearchRequest.body()
-
-            println(generalSearchRequest.body() as String)
 
             for (result in jsonObject.results) {
                 val specificSearchRequest: HttpResponse = client.get(
@@ -60,7 +57,7 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
                             "&key=$API_KEY"
                 )
 
-                if (specificSearchRequest.status.value in 200..299) {
+                if (specificSearchRequest.status.value == 200) {
                     val restaurant: Restaurant = specificSearchRequest.body()
                     val encodedArray = mutableListOf<String>()
 
@@ -68,27 +65,29 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
                         restaurant.result.photos_encoded = mutableListOf()
                     } else {
                         for (photo in restaurant.result.photos.take(numberOfImages)) {
-                            val photoRequest: HttpResponse =
-                                client.get("${url}photo?maxwidth=400&photo_reference=${photo.photo_reference}&key=$API_KEY")
+                            val photoRequest: HttpResponse = client.get("${url}photo?maxwidth=400&photo_reference=${photo.photo_reference}&key=$API_KEY")
                             encodedArray += Base64.getEncoder().encodeToString(photoRequest.body())
                         }
-                        restaurant.result.photos_encoded = encodedArray.take(numberOfImages)
+                        restaurant.result.photos_encoded = encodedArray
+
+                        if(restaurant.result.geometry != null) {
+                            val rating = foodStandardsLookup(restaurant.result.geometry.location.lat, restaurant.result.geometry.location.lng, restaurant.result.name)
+                            restaurant.result.hygeineRating = rating
+                        }
                         restaurantArray += restaurant
                     }
                 } else {
                     println("Unsuccessful connection, response code: ${specificSearchRequest.status}")
                 }
             }
+            for(restaurant in restaurantArray){
+                println("Restaurant: ${restaurant.result.name}")
+            }
         } else {
             println("Unsuccessful connection, response code: ${generalSearchRequest.status}")
         }
     }
     client.close()
-
-    for (restaurant in restaurantArray) {
-        println(restaurant)
-    }
-
     return restaurantArray
 }
 
