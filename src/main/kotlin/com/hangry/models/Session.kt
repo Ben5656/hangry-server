@@ -254,13 +254,6 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     }
     fun end() {
         ended = true
-
-        val matchScores = calculateMatchScores()
-        restaurantsPoints.keys.forEach {restaurant ->
-            restaurantsPoints.remove(restaurant)?.let { it ->
-                restaurantsPoints.put(matchScores.find { it.id == restaurant.id } ?: restaurant, it)
-            }
-        }
     }
 
     @JsonIgnore
@@ -268,7 +261,8 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         return restaurantsPoints.toList().sortedBy { (_, value) -> value }.toMap().keys.toList()
     }
 
-    private fun calculateMatchScores(): List<Restaurant> {
+    @JsonIgnore
+    fun getMatches(): MutableMap<String, Float> {
         val totalVoters = givenPreferences.size
 
         val scoreZeroOffset = restaurantsPoints.values.min()
@@ -327,7 +321,8 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
         // TODO: add pricing to scoring
 
-        return restaurantsPoints.keys.map {
+        val restaurantScoreMapping: MutableMap<String, Float> = mutableMapOf()
+        restaurantsPoints.keys.forEach {
             var scoresAvailable = 0
             var match = 0f
 
@@ -353,7 +348,8 @@ class Session(val code: String, val type: SessionType, val location: Location, v
             }
 
             match /= scoresAvailable
-            return@map it.copy(match = match)
+            restaurantScoreMapping[it.id] = match
         }
+        return restaurantScoreMapping
     }
 }

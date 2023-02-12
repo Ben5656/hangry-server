@@ -73,7 +73,6 @@ data class Restaurant(
     val description: String?,
     val wheelchair: Boolean?,
     val location: Location?,
-    val match: Float? // this should be somewhere else as it's not populated until the end
 )
 
 @Serializable
@@ -83,7 +82,7 @@ data class Choices(val choices: List<Restaurant>)
 data class ChoiceBody(val choice: String)
 
 @Serializable
-data class ResultsResponse(val results: List<Restaurant>)
+data class ResultsResponse(val results: List<Restaurant>, val matches: Map<String, Float>)
 
 @Serializable
 data class UserInfo(val photo: String, val status: UserStatus)
