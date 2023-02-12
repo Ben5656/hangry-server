@@ -26,12 +26,6 @@ enum class Category {
 }
 
 @Serializable
-enum class Diet {
-    NORMAL,
-    VEGETARIAN
-}
-
-@Serializable
 data class Location(val lat: Float, val lng: Float)
 
 @Serializable
@@ -45,7 +39,7 @@ data class JoinSessionBody(
 @Serializable
 data class PreferencesBody(
     val categories: List<Category>,
-    val diet: Diet,
+    val vegetarian: Boolean,
     val alcohol: Boolean,
     val minPrice: Int,
     val maxPrice: Int

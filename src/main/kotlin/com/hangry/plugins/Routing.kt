@@ -52,8 +52,8 @@ fun Application.configureRouting() {
                 return@post
             }
 
-            val (categories, diet, alcohol, minPrice, maxPrice) = call.receive<PreferencesBody>()
-            session.addPreferences(token, categories, diet, alcohol, minPrice, maxPrice)
+            val (categories, vegetarian, alcohol, minPrice, maxPrice) = call.receive<PreferencesBody>()
+            session.addPreferences(token, categories, vegetarian, alcohol, minPrice, maxPrice)
             call.respond(HttpStatusCode.OK)
         }
         put("/{code}/start") {

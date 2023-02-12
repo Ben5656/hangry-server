@@ -19,7 +19,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     @Transient private val givenPreferences = mutableSetOf<String>() // track if token has given votes/preferences
 
     @Transient private val categoryVotes: MutableMap<Category, Int> = EnumMap(Category::class.java)
-    @Transient private val dietVotes: MutableMap<Diet, Int> = EnumMap(Diet::class.java)
+    @Transient private val vegetarianVotes: MutableMap<Boolean, Int> = HashMap()
     @Transient private val alcoholVotes: MutableMap<Boolean, Int> = HashMap()
     @Transient private val minPriceVotes: MutableMap<Int, Int> = HashMap()
     @Transient private val maxPriceVotes: MutableMap<Int, Int> = HashMap()
@@ -63,11 +63,11 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         return TokenInfo(token, false)
     }
 
-    fun addPreferences(token: String, categories: List<Category>, diet: Diet, alcohol: Boolean, minPrice: Int, maxPrice: Int) {
+    fun addPreferences(token: String, categories: List<Category>, vegetarian: Boolean, alcohol: Boolean, minPrice: Int, maxPrice: Int) {
         givenPreferences.add(token)
         // increment vote answer for each question
         categories.forEach { addCategory(it) }
-        addDiet(diet)
+        addVegetarian(vegetarian)
         addAlcohol(alcohol)
         addPrice(minPrice, maxPrice)
     }
@@ -76,8 +76,8 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         categoryVotes[category] = categoryVotes.getOrDefault(category, 0) + 1
     }
 
-    private fun addDiet(diet: Diet) {
-        dietVotes[diet] = dietVotes.getOrDefault(diet, 0) + 1
+    private fun addVegetarian(vegetarian: Boolean) {
+        vegetarianVotes[vegetarian] = vegetarianVotes.getOrDefault(vegetarian, 0) + 1
     }
 
     private fun addAlcohol(alcohol: Boolean) {
@@ -164,7 +164,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
                 NUMBER_OF_IMAGES
             ).map { nearbySearchRestaurantToSessionRestaurant(it) }
 
-            val isVegetarian = dietVotes.maxBy { it.value }.key == Diet.VEGETARIAN
+            val isVegetarian = vegetarianVotes.maxBy { it.value }.key
             val isAlcohol = alcoholVotes.maxBy { it.value }.key
             val averageMinPrice = minPriceVotes.maxBy { it.value }.key
             val averageMaxPrice = maxPriceVotes.maxBy { it.value }.key
