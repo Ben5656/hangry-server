@@ -66,7 +66,8 @@ data class Restaurant(
     val website: String?,
     val description: String?,
     val wheelchair: Boolean?,
-    val location: Location?
+    val location: Location?,
+    val match: Float? // this should be somewhere else as it's not populated until the end
 )
 
 @Serializable
@@ -74,6 +75,3 @@ data class Choices(val choices: List<Restaurant>)
 
 @Serializable
 data class ChoiceBody(val choice: String)
-
-@Serializable
-data class RestaurantResults(val results: List<Restaurant>)

@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.math.absoluteValue
 import kotlin.random.Random
 
 val sessionStorage = mutableListOf<Session>()
@@ -207,10 +208,100 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     }
     fun end() {
         ended = true
+
+        val matchScores = calculateMatchScores()
+        restaurantsPoints.keys.forEach {restaurant ->
+            restaurantsPoints.remove(restaurant)?.let { it ->
+                restaurantsPoints.put(matchScores.find { it.id == restaurant.id } ?: restaurant, it)
+            }
+        }
     }
 
     @JsonIgnore
     fun getOrderedRestaurants(): List<Restaurant> {
         return restaurantsPoints.toList().sortedBy { (_, value) -> value }.toMap().keys.toList()
+    }
+
+    private fun calculateMatchScores(): List<Restaurant> {
+        val totalVoters = givenPreferences.size
+
+        val scoreZeroOffset = restaurantsPoints.values.min()
+        restaurantsPoints.keys.forEach { restaurantsPoints[it]?.minus(scoreZeroOffset) } // normalise the minimum value to be zero
+
+        // calculate score based on voting (0-1)
+        val maxScore = restaurantsPoints.values.max()
+        val votingScores: MutableMap<String, Float> = mutableMapOf()
+        restaurantsPoints.forEach { (restaurant, points) ->
+            votingScores[restaurant.id] = maxScore.minus(points.toFloat()).div(maxScore)
+        }
+
+        // calculate score based on category (0-1)
+        val categoryScores: MutableMap<String, Float> = mutableMapOf()
+        restaurantsPoints.keys.forEach {
+            var numInCategory = 0 // number of categories this restaurant is in
+            restaurantsPerCategory.entries.forEach { (_, categoryRestaurants) ->
+                if (categoryRestaurants.contains(it)) { numInCategory++ }
+            }
+            categoryScores[it.id] = numInCategory.div(totalVoters.toFloat())
+        }
+
+        // calculate score based on vegetarian
+        val trueVegetarianScore = vegetarianVotes.getOrDefault(true, 0).div(totalVoters.toFloat())
+        val falseVegetarianScore = vegetarianVotes.getOrDefault(false, 0).div(totalVoters.toFloat())
+        val vegetarianScores: MutableMap<String, Float> = mutableMapOf()
+        restaurantsPoints.keys.forEach {
+            if (it.vegetarianFood != null) {
+                vegetarianScores[it.id] = if (it.vegetarianFood) trueVegetarianScore else falseVegetarianScore
+            }
+        }
+
+        // calculate score based on alcohol
+        val trueAlcoholScore = alcoholVotes.getOrDefault(true, 0).div(totalVoters.toFloat())
+        val falseAlcoholScore = alcoholVotes.getOrDefault(false, 0).div(totalVoters.toFloat())
+        val alcoholScores: MutableMap<String, Float> = mutableMapOf()
+        restaurantsPoints.keys.forEach {
+            val hasAlcohol = it.beer ?: false || it.wine ?: false
+            if (hasAlcohol) {
+                alcoholScores[it.id] = if (hasAlcohol) trueAlcoholScore else falseAlcoholScore
+            }
+        }
+
+        // calculate score based on wheelchair
+        val wheelchairRequired = wheelchairVotes.containsKey(true) // if one person needs wheelchair, then it is a big requirement
+        val wheelchairScores: MutableMap<String, Float> = mutableMapOf()
+        if (wheelchairRequired) {
+            restaurantsPoints.keys.forEach { wheelchairScores[it.id] = if (it.wheelchair == true) 1f else 0f }
+        }
+
+        // TODO: add pricing to scoring
+
+        return restaurantsPoints.keys.map {
+            var scoresAvailable = 0
+            var match = 0f
+
+            if (votingScores[it.id] != null) {
+                scoresAvailable++
+                match += votingScores[it.id] ?: 0f
+            }
+            if (categoryScores[it.id] != null) {
+                scoresAvailable++
+                match += categoryScores[it.id] ?: 0f
+            }
+            if (vegetarianScores[it.id] != null) {
+                scoresAvailable++
+                match += vegetarianScores[it.id] ?: 0f
+            }
+            if (alcoholScores[it.id] != null) {
+                scoresAvailable++
+                match += alcoholScores[it.id] ?: 0f
+            }
+            if (wheelchairScores[it.id] != null) {
+                scoresAvailable++
+                match += wheelchairScores[it.id] ?: 0f
+            }
+
+            match /= scoresAvailable
+            return@map it.copy(match = match)
+        }
     }
 }
