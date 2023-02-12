@@ -25,10 +25,8 @@ fun main() {
 
 fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOfImages: Int) : List<Restaurant> {
     val API_KEY: String = dotenv()["API_KEY"]
-
-    val restaurantArray = mutableListOf<Restaurant>()
-
     val url = "https://maps.googleapis.com/maps/api/place/"
+    val restaurantArray = mutableListOf<Restaurant>()
 
     val client = HttpClient(CIO) {
         install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
@@ -47,6 +45,8 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
                     "&key=$API_KEY"
         )
 
+        println(generalSearchRequest.body() as String)
+
         if (generalSearchRequest.status.value in 200..299) {
             val jsonObject: Place = generalSearchRequest.body()
 
@@ -54,7 +54,7 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
                 val specificSearchRequest: HttpResponse = client.get(
                     "${url}details/json?" +
                             "place_id=${result.place_id}" +
-                            "&fields=name%2Cdine_in%2Cdelivery%2Ctakeout%2Cserves_beer%2Cprice_level%2Cserves_vegetarian_food%2Cserves_wine%2Crating%2Cwebsite%2Cplace_id%2Cphoto" +
+                            "&fields=name%2Cdine_in%2Cdelivery%2Ctakeout%2Cserves_beer%2Cprice_level%2Cserves_vegetarian_food%2Cserves_wine%2Crating%2Cwebsite%2Cplace_id%2Cphoto%2Ctypes" +
                             "&key=$API_KEY"
                 )
 
