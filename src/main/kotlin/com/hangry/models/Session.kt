@@ -284,11 +284,13 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         // calculate score based on category (0-1)
         val categoryScores: MutableMap<String, Float> = mutableMapOf()
         restaurantsPoints.keys.forEach {
-            var numInCategory = 0 // number of categories this restaurant is in
-            restaurantsPerCategory.entries.forEach { (_, categoryRestaurants) ->
-                if (categoryRestaurants.contains(it)) { numInCategory++ }
+            var totalCategoryVotes = 0 // number of votes this restaurant has based on its categories
+            restaurantsPerCategory.entries.forEach { (category, categoryRestaurants) ->
+                if (categoryRestaurants.contains(it)) {
+                    totalCategoryVotes = totalCategoryVotes.plus(categoryVotes[category] ?: 0)
+                }
             }
-            categoryScores[it.id] = numInCategory.div(totalVoters.toFloat())
+            categoryScores[it.id] = totalCategoryVotes.div(totalVoters.toFloat())
         }
 
         // calculate score based on vegetarian
