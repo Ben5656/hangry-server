@@ -21,7 +21,8 @@ enum class Category {
     SPANISH,
     MEXICAN,
     PUB,
-    TAPAS
+    TAPAS,
+    HALAL
 }
 
 @Serializable
