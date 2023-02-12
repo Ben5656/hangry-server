@@ -25,6 +25,8 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     @Transient private val minPriceVotes: MutableMap<Int, Int> = HashMap()
     @Transient private val maxPriceVotes: MutableMap<Int, Int> = HashMap()
 
+    @Transient private val restaurantsPerCategory: MutableMap<Category, List<Restaurant>> = EnumMap(Category::class.java)
+
     // Store number of choices token has made
     @Transient private val tokenChoices: MutableMap<String, Int> = HashMap()
     // Store location pairs given to user
@@ -84,6 +86,16 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
     private fun addCategory(category: Category) {
         categoryVotes[category] = categoryVotes.getOrDefault(category, 0) + 1
+
+        if (!restaurantsPerCategory.containsKey(category)) {
+            restaurantsPerCategory[category] = getNearby(
+                location.lat.toDouble(),
+                location.lng.toDouble(),
+                radius,
+                category.name,
+                NUMBER_OF_IMAGES
+            ).map { nearbySearchRestaurantToSessionRestaurant(it) }
+        }
     }
 
     private fun addVegetarian(vegetarian: Boolean) {
@@ -170,20 +182,14 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         // Create initial order based on category popularity
         val orderedCategories = categoryVotes.toList().sortedBy { (_, value) -> value }
         orderedCategories.forEach { category ->
-            val restaurantsForCategory = getNearby(
-                location.lat.toDouble(),
-                location.lng.toDouble(),
-                radius,
-                category.first.toString(),
-                NUMBER_OF_IMAGES
-            ).map { nearbySearchRestaurantToSessionRestaurant(it) }
+            val restaurantsForCategory = restaurantsPerCategory[category.first]
 
             val isVegetarian = vegetarianVotes.maxBy { it.value }.key
             val isAlcohol = alcoholVotes.maxBy { it.value }.key
             val isWheelchair = wheelchairVotes.getOrDefault(true, false) // if true, then prioritise, else ignore
             val averageMinPrice = minPriceVotes.maxBy { it.value }.key
             val averageMaxPrice = maxPriceVotes.maxBy { it.value }.key
-            val sortedRestaurantsForCategory = restaurantsForCategory.sortedWith(
+            val sortedRestaurantsForCategory = restaurantsForCategory?.sortedWith(
                 compareBy(
                     // true will be sorted before false
                     { it.vegetarianFood == isVegetarian },
@@ -194,7 +200,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
                 )
             )
 
-            sortedRestaurantsForCategory.forEach {
+            sortedRestaurantsForCategory?.forEach {
                 restaurantsPoints[it] = restaurantsPoints.keys.size
             }
         }
