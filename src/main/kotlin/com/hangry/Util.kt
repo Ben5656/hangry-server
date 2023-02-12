@@ -1,5 +1,6 @@
 package com.hangry
 
+import com.hangry.models.Location
 import com.hangry.nearbySearch.Restaurant
 
 fun nearbySearchRestaurantToSessionRestaurant(restaurant: Restaurant): com.hangry.models.Restaurant {
@@ -18,5 +19,10 @@ fun nearbySearchRestaurantToSessionRestaurant(restaurant: Restaurant): com.hangr
         restaurant.result.takeout,
         restaurant.result.website,
         restaurant.result.editorial_summary?.overview,
+        restaurant.result.wheelchair_accessible_entrance,
+        Location(
+            restaurant.result.geometry.location.lat.toFloat(),
+            restaurant.result.geometry.location.lng.toFloat()
+        )
     )
 }

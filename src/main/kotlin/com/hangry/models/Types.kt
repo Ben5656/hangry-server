@@ -64,6 +64,8 @@ data class Restaurant(
     val takeout: Boolean?,
     val website: String?,
     val description: String?,
+    val wheelchair: Boolean?,
+    val location: Location
 )
 
 @Serializable
