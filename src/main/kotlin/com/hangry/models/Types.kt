@@ -41,6 +41,7 @@ data class PreferencesBody(
     val categories: List<Category>,
     val vegetarian: Boolean,
     val alcohol: Boolean,
+    val wheelchair: Boolean,
     val minPrice: Int,
     val maxPrice: Int
 )
