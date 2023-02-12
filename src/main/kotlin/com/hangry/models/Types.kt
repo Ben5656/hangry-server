@@ -27,8 +27,7 @@ enum class Category {
 @Serializable
 enum class Diet {
     NORMAL,
-    VEGETARIAN,
-    VEGAN
+    VEGETARIAN
 }
 
 @Serializable

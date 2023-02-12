@@ -132,15 +132,29 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
         // Create initial order based on category popularity
         val orderedCategories = categoryVotes.toList().sortedBy { (_, value) -> value }
-        orderedCategories.forEach {
+        orderedCategories.forEach { category ->
             val restaurantsForCategory = getNearby(
                 location.lat.toDouble(),
                 location.lng.toDouble(),
                 radius,
-                it.first.toString(),
+                category.first.toString(),
                 NUMBER_OF_IMAGES
             ).map { nearbySearchRestaurantToSessionRestaurant(it) }
-            restaurants.addAll(restaurantsForCategory)
+
+            val isVegetarian = dietVotes.maxBy { it.value }.key == Diet.VEGETARIAN
+            val isAlcohol = alcoholVotes.maxBy { it.value }.key
+            val averageMinPrice = minPriceVotes.maxBy { it.value }.key
+            val averageMaxPrice = maxPriceVotes.maxBy { it.value }.key
+            val sortedRestaurantsForCategory = restaurantsForCategory.sortedWith(
+                compareBy(
+                    // true will be sorted before false
+                    { it.vegetarianFood == isVegetarian },
+                    { it.wine == isAlcohol || it.beer == isAlcohol },
+                    { it.priceLevel !=null && averageMinPrice <= it.priceLevel },
+                    { it.priceLevel != null && averageMaxPrice >= it.priceLevel }
+                )
+            )
+            restaurants.addAll(sortedRestaurantsForCategory)
         }
     }
     fun end() {
