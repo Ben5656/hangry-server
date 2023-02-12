@@ -150,7 +150,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
             restaurantsPoints.keys.forEach firstChoice@ { firstChoice ->
                 restaurantsPoints.keys.forEach secondChoice@ { secondChoice ->
-                    if (firstChoice == secondChoice) return@firstChoice
+                    if (firstChoice.id == secondChoice.id) return@firstChoice
                     if (pairVoted.contains(Pair(firstChoice.id, secondChoice.id)) ||
                         pairVoted.contains(Pair(secondChoice.id, firstChoice.id))) return@secondChoice
 
