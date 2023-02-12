@@ -33,7 +33,7 @@ fun Application.configureRouting() {
             }
 
             val (photo) = call.receive<JoinSessionBody>() // TODO: add selfie/photo support
-            val tokenInfo = session.createToken()
+            val tokenInfo = session.createToken(photo)
             call.respond(tokenInfo)
         }
         // TODO: switch to a proper auth library
@@ -161,6 +161,23 @@ fun Application.configureRouting() {
             }
 
             call.respond(session.getOrderedRestaurants())
+        }
+        get("/{code}/users") {
+            val code = call.parameters["code"]
+            val token = call.request.headers["Authorization"]
+            val session = sessionStorage.find { it.code == code }
+
+            if (session == null) {
+                // If session doesn't exist, throw 404
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            } else if (token == null || !session.isAdmin(token)) {
+                // If not authed, or token is not admin, throw 401
+                call.respond(HttpStatusCode.Unauthorized)
+                return@get
+            }
+
+            call.respond(session.getUsersInfo())
         }
     }
 }

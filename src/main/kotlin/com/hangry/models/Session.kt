@@ -7,7 +7,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.util.*
 import kotlin.collections.HashMap
-import kotlin.math.absoluteValue
 import kotlin.random.Random
 
 val sessionStorage = mutableListOf<Session>()
@@ -16,6 +15,7 @@ val sessionStorage = mutableListOf<Session>()
 class Session(val code: String, val type: SessionType, val location: Location, val radius: Int) { // TODO: do this with inheritance
     @Transient private val tokens = mutableSetOf<String>() // joined, but not necessarily given votes
     @Transient private var adminToken: String? = null
+    @Transient private var tokenPhotos: MutableMap<String, String> = mutableMapOf()
 
     @Transient private val givenPreferences = mutableSetOf<String>() // track if token has given votes/preferences
 
@@ -55,9 +55,10 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         }
     }
 
-    fun createToken(): TokenInfo {
+    fun createToken(photo: String): TokenInfo {
         val token = UUID.randomUUID().toString()
         tokens.add(token) // add user's token to session
+        tokenPhotos[token] = photo
 
         if (adminToken == null) {
             adminToken = token
@@ -65,6 +66,12 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         }
 
         return TokenInfo(token, false)
+    }
+
+    fun getUsersInfo(): List<UserInfo> {
+        return tokenPhotos.map {(token, photo) ->
+            UserInfo(photo, if (givenPreferences.contains(token)) UserStatus.READY else UserStatus.JOINED )
+        }
     }
 
     fun addPreferences(
@@ -188,7 +195,10 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
         // Remove all users who joined but have not given their preferences
         val notGivenPreferences = tokens.minus(givenPreferences)
-        tokens.removeAll(notGivenPreferences)
+        notGivenPreferences.forEach {
+            tokens.remove(it)
+            tokenPhotos.remove(it)
+        }
 
         // Create initial order based on category popularity
         val orderedCategories = categoryVotes.toList().sortedBy { (_, value) -> value }
