@@ -347,8 +347,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
                 match += wheelchairScores[it.id] ?: 0f
             }
 
-            match /= scoresAvailable
-            restaurantScoreMapping[it.id] = match
+            restaurantScoreMapping[it.id] = match.div(scoresAvailable)
         }
         return restaurantScoreMapping
     }
