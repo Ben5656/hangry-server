@@ -16,8 +16,8 @@ import java.util.*
 fun main() {
     val lat = 52.948698
     val long = -1.180276
-    val radius = 300
-    val foodType = "pub"
+    val radius = 1500
+    val foodType = "indian"
     val numberOfImages = 2
 
     getNearby(lat, long, radius, foodType, numberOfImages)
@@ -50,11 +50,13 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
         if (generalSearchRequest.status.value in 200..299) {
             val jsonObject: Place = generalSearchRequest.body()
 
+            println(generalSearchRequest.body() as String)
+
             for (result in jsonObject.results) {
                 val specificSearchRequest: HttpResponse = client.get(
                     "${url}details/json?" +
                             "place_id=${result.place_id}" +
-                            "&fields=name%2Cdine_in%2Cdelivery%2Ctakeout%2Cserves_beer%2Cprice_level%2Cserves_vegetarian_food%2Cserves_wine%2Crating%2Cwebsite%2Cplace_id%2Cphoto%2Ctypes%2Ceditorial_summary" +
+                            "&fields=name%2Cdine_in%2Cdelivery%2Ctakeout%2Cserves_beer%2Cprice_level%2Cserves_vegetarian_food%2Cserves_wine%2Crating%2Cwebsite%2Cplace_id%2Cphoto%2Ctypes%2Ceditorial_summary%2Cwheelchair_accessible_entrance" +
                             "&key=$API_KEY"
                 )
 

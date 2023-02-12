@@ -25,6 +25,7 @@ data class Result(
     val user_ratings_total: Int? = null,
     val vicinity: String? = null,
 
+    val wheelchair_accessible_entrance: Boolean? = null,
     val editorial_summary: EditorialSummary? = null,
     var photos_encoded: List<String>? = null,
     val name: String,
