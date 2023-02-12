@@ -83,4 +83,10 @@ data class Choices(val choices: List<Restaurant>)
 data class ChoiceBody(val choice: String)
 
 @Serializable
+data class ResultsResponse(val results: List<Restaurant>)
+
+@Serializable
 data class UserInfo(val photo: String, val status: UserStatus)
+
+@Serializable
+data class UsersResponse(val users: List<UserInfo>)

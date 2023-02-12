@@ -160,7 +160,7 @@ fun Application.configureRouting() {
                 return@get
             }
 
-            call.respond(session.getOrderedRestaurants())
+            call.respond(ResultsResponse(session.getOrderedRestaurants()))
         }
         get("/{code}/users") {
             val code = call.parameters["code"]
@@ -177,7 +177,7 @@ fun Application.configureRouting() {
                 return@get
             }
 
-            call.respond(session.getUsersInfo())
+            call.respond(UsersResponse(session.getUsersInfo()))
         }
     }
 }
