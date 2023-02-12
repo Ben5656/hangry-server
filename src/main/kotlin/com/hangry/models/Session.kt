@@ -6,6 +6,7 @@ import com.hangry.nearbySearchRestaurantToSessionRestaurant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.random.Random
 
 val sessionStorage = mutableListOf<Session>()
@@ -23,12 +24,15 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     @Transient private val minPriceVotes: MutableMap<Int, Int> = HashMap()
     @Transient private val maxPriceVotes: MutableMap<Int, Int> = HashMap()
 
-    // Store if location pair has been voted on already by user
-    @Transient private val pairVoted: MutableMap<Pair<String, String>, MutableList<String>> = HashMap()
+    // Store number of choices token has made
+    @Transient private val tokenChoices: MutableMap<String, Int> = HashMap()
+    // Store location pairs given to user
+    @Transient private val pairVoted: MutableList<Pair<String, String>> = mutableListOf()
     // Store the currently issued pair
     @Transient private val givenPair: MutableMap<String, Pair<String, String>> = HashMap()
 
-    @Transient private var restaurants: MutableList<Restaurant> = arrayListOf()
+    // Lower points, the better
+    @Transient private var restaurantsPoints: MutableMap<Restaurant, Int> = HashMap()
 
     var started = false
     var ended = false
@@ -37,6 +41,7 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         val SESSION_CODE_LENGTH = 4
         val SESSION_CHAR_POOL: List<Char> = ('A'..'Z') + ('0'..'9')
         val NUMBER_OF_IMAGES = 2
+        val NUMBER_OF_CHOICES = 5
 
         fun generateCode(): String {
             // TODO: check if it already exists
@@ -86,16 +91,29 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
 
     private fun restaurantIdToRestaurant(id: String): Restaurant {
-        return restaurants.find { it.id == id }!! // should do this a better way
+        return restaurantsPoints.keys.find { it.id == id }!! // should do this a better way
     }
 
     fun getRestaurantChoices(token: String): Choices {
-        var pair = givenPair[token]
+        val pair = givenPair[token]
         if (pair == null) {
-            // TODO: some logic to get two pairs and also handle when no pairs left/ended
-            pair = Pair("A", "B") // dummy
+            if ((tokenChoices[token] ?: 0) > NUMBER_OF_CHOICES) {
+                // If we have reached number of choices, don't return more
+                return Choices(listOf())
+            }
 
-            givenPair[token] = pair
+            restaurantsPoints.keys.forEach firstChoice@ { firstChoice ->
+                restaurantsPoints.keys.forEach secondChoice@ { secondChoice ->
+                    if (firstChoice == secondChoice) return@firstChoice
+                    if (pairVoted.contains(Pair(firstChoice.id, secondChoice.id)) ||
+                        pairVoted.contains(Pair(secondChoice.id, firstChoice.id))) return@secondChoice
+
+                    return Choices(listOf(firstChoice, secondChoice))
+                }
+            }
+
+            // No more valid choices available
+            return Choices(listOf()) // TODO: when this occurs should we end the session?
         }
 
         return Choices(listOf(
@@ -108,15 +126,20 @@ class Session(val code: String, val type: SessionType, val location: Location, v
         if (ended) { return }
 
         val pair = givenPair[token]
+        // Check vote is valid for current stored pair for token
         if (pair != null && (pair.first == location || pair.second == location)) {
-            // TODO: add vote to location
+            // Locations should always exist
+            restaurantsPoints[restaurantIdToRestaurant(location)]?.minus(1) // minus improves score (lower is better)
+            restaurantsPoints[restaurantIdToRestaurant( // plus is worse
+                if (pair.first == token) pair.second else pair.first
+            )]?.plus(1)
 
             givenPair.remove(token)
-
-            if (pairVoted.containsKey(pair)) {
-                pairVoted[pair]?.add(token)
+            pairVoted.add(pair)
+            if (tokenChoices[token] == null) {
+                tokenChoices[token] = 1
             } else {
-                pairVoted[pair] = arrayListOf(token)
+                tokenChoices[token]?.plus(1)
             }
         }
     }
@@ -154,7 +177,10 @@ class Session(val code: String, val type: SessionType, val location: Location, v
                     { it.priceLevel != null && averageMaxPrice >= it.priceLevel }
                 )
             )
-            restaurants.addAll(sortedRestaurantsForCategory)
+
+            sortedRestaurantsForCategory.forEach {
+                restaurantsPoints[it] = restaurantsPoints.keys.size
+            }
         }
     }
     fun end() {
@@ -163,6 +189,6 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
     @JsonIgnore
     fun getOrderedRestaurants(): List<Restaurant> {
-        return restaurants
+        return restaurantsPoints.toList().sortedBy { (_, value) -> value }.toMap().keys.toList()
     }
 }
