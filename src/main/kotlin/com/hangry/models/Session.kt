@@ -3,6 +3,10 @@ package com.hangry.models
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.hangry.nearbySearch.getNearby
 import com.hangry.nearbySearchRestaurantToSessionRestaurant
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.util.*
@@ -38,6 +42,9 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     // Lower points, the better
     @Transient private var restaurantsPoints: MutableMap<Restaurant, Int> = HashMap()
 
+    @Transient private var categoryJobs: MutableMap<Category, Job> = EnumMap(Category::class.java)
+    @Transient private var jobCoroutineScope = CoroutineScope(Dispatchers.IO)
+
     var started = false
     var ended = false
 
@@ -52,6 +59,21 @@ class Session(val code: String, val type: SessionType, val location: Location, v
             return (1..SESSION_CODE_LENGTH)
                 .map { Random.nextInt(0, SESSION_CHAR_POOL.size).let { SESSION_CHAR_POOL[it] } }
                 .joinToString("")
+        }
+    }
+
+    init {
+        Category.values().forEach { category ->
+            val categoryJob = jobCoroutineScope.launch {
+                restaurantsPerCategory[category] = getNearby(
+                    location.lat.toDouble(),
+                    location.lng.toDouble(),
+                    radius,
+                    category.name,
+                    NUMBER_OF_IMAGES
+                ).map { nearbySearchRestaurantToSessionRestaurant(it) }
+            }
+            categoryJobs[category] = categoryJob
         }
     }
 
@@ -94,16 +116,6 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
     private fun addCategory(category: Category) {
         categoryVotes[category] = categoryVotes.getOrDefault(category, 0) + 1
-
-        if (!restaurantsPerCategory.containsKey(category)) {
-            restaurantsPerCategory[category] = getNearby(
-                location.lat.toDouble(),
-                location.lng.toDouble(),
-                radius,
-                category.name,
-                NUMBER_OF_IMAGES
-            ).map { nearbySearchRestaurantToSessionRestaurant(it) }
-        }
     }
 
     private fun addVegetarian(vegetarian: Boolean) {
@@ -193,6 +205,8 @@ class Session(val code: String, val type: SessionType, val location: Location, v
     fun isAdmin(token: String) = adminToken == token
     fun isValidToken(token: String) = tokens.any { it == token}
     fun start() {
+        stopCategoryJobs()
+
         started = true
 
         // Remove all users who joined but have not given their preferences
@@ -225,6 +239,16 @@ class Session(val code: String, val type: SessionType, val location: Location, v
 
             sortedRestaurantsForCategory?.forEach {
                 restaurantsPoints[it] = restaurantsPoints.keys.size
+            }
+        }
+    }
+
+    private fun stopCategoryJobs() {
+        Category.values().forEach {category ->
+            if (!categoryVotes.keys.contains(category)) {
+                categoryJobs[category]?.cancel()
+            } else {
+                jobCoroutineScope.launch { categoryJobs[category]?.join() }
             }
         }
     }
