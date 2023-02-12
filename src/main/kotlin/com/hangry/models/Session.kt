@@ -321,7 +321,29 @@ class Session(val code: String, val type: SessionType, val location: Location, v
             restaurantsPoints.keys.forEach { wheelchairScores[it.id] = if (it.wheelchair == true) 1f else 0f }
         }
 
-        // TODO: add pricing to scoring
+        // calculate score based on minPrice
+        val minPriceScores: MutableMap<String, Float> = mutableMapOf()
+        restaurantsPoints.keys.forEach {
+            var numSuitable = 0
+            minPriceVotes.forEach { (minPrice, votes) ->
+                if (it.priceLevel != null && minPrice <= it.priceLevel) {
+                    numSuitable = numSuitable.plus(votes)
+                }
+            }
+            minPriceScores[it.id] = numSuitable.div(totalVoters.toFloat())
+        }
+
+        // calculate score based on maxPrice
+        val maxPriceScores: MutableMap<String, Float> = mutableMapOf()
+        restaurantsPoints.keys.forEach {
+            var numSuitable = 0
+            maxPriceVotes.forEach { (maxPrice, votes) ->
+                if (it.priceLevel != null && maxPrice >= it.priceLevel) {
+                    numSuitable = numSuitable.plus(votes)
+                }
+            }
+            maxPriceScores[it.id] = numSuitable.div(totalVoters.toFloat())
+        }
 
         val restaurantScoreMapping: MutableMap<String, Float> = mutableMapOf()
         restaurantsPoints.keys.forEach {
@@ -347,6 +369,14 @@ class Session(val code: String, val type: SessionType, val location: Location, v
             if (wheelchairScores[it.id] != null) {
                 scoresAvailable++
                 match += wheelchairScores[it.id] ?: 0f
+            }
+            if (minPriceScores[it.id] != null) {
+                scoresAvailable++
+                match += minPriceScores[it.id] ?: 0f
+            }
+            if (maxPriceScores[it.id] != null) {
+                scoresAvailable++
+                match += maxPriceScores[it.id] ?: 0f
             }
 
             restaurantScoreMapping[it.id] = match.div(scoresAvailable)
