@@ -104,6 +104,9 @@ fun Application.configureRouting() {
                 // If not authed, or token is not valid, throw 401
                 call.respond(HttpStatusCode.Unauthorized)
                 return@get
+            } else if (!session.started) {
+                call.respond(HttpStatusCode.Locked)
+                return@get
             }
 
             call.respond(session.getRestaurantChoices(token))
