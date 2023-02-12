@@ -24,6 +24,7 @@ fun nearbySearchRestaurantToSessionRestaurant(restaurant: Restaurant): com.hangr
         Location(
             restaurant.result.geometry.location.lat.toFloat(),
             restaurant.result.geometry.location.lng.toFloat()
-        ) else null
+        ) else null,
+        restaurant.result.hygeineRating
     )
 }
