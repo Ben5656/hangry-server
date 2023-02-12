@@ -54,7 +54,7 @@ fun getNearby(lat: Double, long: Double, radius: Int, foodType: String, numberOf
                 val specificSearchRequest: HttpResponse = client.get(
                     "${url}details/json?" +
                             "place_id=${result.place_id}" +
-                            "&fields=name%2Cdine_in%2Cdelivery%2Ctakeout%2Cserves_beer%2Cprice_level%2Cserves_vegetarian_food%2Cserves_wine%2Crating%2Cwebsite%2Cplace_id%2Cphoto%2Ctypes" +
+                            "&fields=name%2Cdine_in%2Cdelivery%2Ctakeout%2Cserves_beer%2Cprice_level%2Cserves_vegetarian_food%2Cserves_wine%2Crating%2Cwebsite%2Cplace_id%2Cphoto%2Ctypes%2Ceditorial_summary" +
                             "&key=$API_KEY"
                 )
 

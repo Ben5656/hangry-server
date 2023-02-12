@@ -58,8 +58,18 @@ data class TokenInfo(val token: String, val admin: Boolean)
 data class Restaurant(
     val id: String,
     val name: String,
-//    val description: String,
-    val photos: List<String>
+    val photos: List<String>,
+    val types: List<String>,
+    val rating: Float?,
+    val priceLevel: Int?,
+    val delivery: Boolean?,
+    val dineIn: Boolean?,
+    val beer: Boolean?,
+    val vegetarianFood: Boolean?,
+    val wine: Boolean?,
+    val takeout: Boolean?,
+    val website: String?,
+    val description: String?,
 )
 
 @Serializable

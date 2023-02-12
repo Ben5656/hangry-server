@@ -16,20 +16,21 @@ data class Result(
     val icon: String? = null,
     val icon_background_color: String? = null,
     val icon_mask_base_uri: String? = null,
-    val name: String,
     val opening_hours: OpeningHours? = null,
     val photos: List<Photo>? = null,
-    var photos_encoded: List<String>? = null,
-    val place_id: String,
     val plus_code: PlusCode? = null,
-    val price_level: Int? = null,
-    val rating: Double? = null,
     val reference: String? = null,
     val scope: String? = null,
     val types: List<String>? = null,
     val user_ratings_total: Int? = null,
     val vicinity: String? = null,
 
+    val editorial_summary: EditorialSummary? = null,
+    var photos_encoded: List<String>? = null,
+    val name: String,
+    val place_id: String,
+    val rating: Double? = null,
+    val price_level: Int? = null,
     val delivery: Boolean? = null,
     val dine_in: Boolean? = null,
     val serves_beer: Boolean? = null,
@@ -37,6 +38,12 @@ data class Result(
     val serves_wine: Boolean? = null,
     val takeout: Boolean? = null,
     val website: String? = null
+)
+
+@Serializable
+data class EditorialSummary(
+    val language: String? = null,
+    val overview: String? = null
 )
 
 @Serializable
